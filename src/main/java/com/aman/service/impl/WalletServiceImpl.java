@@ -10,6 +10,7 @@ import com.aman.respository.WalletRepository;
 import com.aman.service.UserService;
 import com.aman.service.WalletService;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -19,8 +20,9 @@ public class WalletServiceImpl implements WalletService {
 	private WalletRepository walletRepository;
 	private UserService userService;
 	
-	public WalletServiceImpl(WalletRepository walletRepository) {
+	public WalletServiceImpl(WalletRepository walletRepository, UserService userService) {
 		this.walletRepository = walletRepository;
+		this.userService = userService;
 	}
 
 	@Override
@@ -52,12 +54,14 @@ public class WalletServiceImpl implements WalletService {
 	}
 
 	@Override
+	@Transactional
 	public void createUser(User user) {
 		Wallet wallet = new Wallet();
 		wallet.setBalance(0.0);
 		wallet.setUserName(user.getUserName());
 		walletRepository.save(wallet);
 		user.setWallet(wallet);
+		user.setRole("USER");
 		userService.createUser(user);
 	}
 	

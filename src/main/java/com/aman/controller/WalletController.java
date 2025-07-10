@@ -59,11 +59,5 @@ public class WalletController {
 		Double balance = walletService.getBalance(userName);
 		return new ResponseEntity<>("Balance - " + balance, HttpStatus.OK);
 	}
-	
-	@PostMapping("/add-user")
-	public ResponseEntity<User> createUser(@RequestBody User user) {
-		walletService.createUser(user);
-		return new ResponseEntity<>(user,HttpStatus.CREATED);
-	}
 
 }

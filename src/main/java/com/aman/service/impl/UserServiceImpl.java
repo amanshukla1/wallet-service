@@ -13,6 +13,8 @@ import com.aman.exception.UserNotFoundException;
 import com.aman.respository.UserRepository;
 import com.aman.service.UserService;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public void createUser(User user) {
 		try {
 			user.setPassword(passwordEncoder.encode(user.getPassword()));

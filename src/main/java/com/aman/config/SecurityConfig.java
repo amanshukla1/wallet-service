@@ -22,7 +22,7 @@ public class SecurityConfig {
 	public SecurityConfig(UserDetailsServiceImpl userDetailsServiceImpl) {
 		this.userDetailsServiceImpl = userDetailsServiceImpl;
 	}
-
+	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
@@ -41,7 +41,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.authorizeHttpRequests(request -> request
-				.requestMatchers("/public/**").permitAll()
+				.requestMatchers("/wallet/public/**").permitAll()
 				.requestMatchers("/wallet/user/**").authenticated()
 				.requestMatchers("/wallet/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated())

@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 
 	public UserDetailsServiceImpl(UserRepository userRepository) {
 		this.userRepository = userRepository;
@@ -22,18 +22,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		log.info("inside loadUserByUsername username - {}", username);
-		User user = userRepository.findByUserName(username).get();
-		if (user != null) {
-			UserDetails userDetail = org.springframework.security.core.userdetails.User.builder()
-					.username(user.getUserName())
-					.password(user.getPassword())
-					.roles(user.getRole())
-					.build();
-			log.info("userDetail {}", userDetail);
-			return userDetail;
-		}
-		throw new UsernameNotFoundException("User Not found!!");
-	}
+		log.info("Inside loadUserByUsername username - {}", username);
 
+		User user = userRepository.findByUserName(username)
+			.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+		
+		log.info("Username: {}, Password: {}, Role: {}", user.getUserName(), user.getPassword(), user.getRole());
+
+		UserDetails userDetail = org.springframework.security.core.userdetails.User.builder()
+			.username(user.getUserName())
+			.password(user.getPassword())
+			.roles(user.getRole())
+			.build();
+
+		log.info("Built UserDetails: {}", userDetail);
+		return userDetail;
+	}
 }
