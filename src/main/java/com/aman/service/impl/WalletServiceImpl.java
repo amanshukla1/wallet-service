@@ -2,10 +2,12 @@ package com.aman.service.impl;
 
 import org.springframework.stereotype.Service;
 
+import com.aman.entity.User;
 import com.aman.entity.Wallet;
 import com.aman.exception.InsufficientBalanceException;
 import com.aman.exception.WalletNotFoundException;
 import com.aman.respository.WalletRepository;
+import com.aman.service.UserService;
 import com.aman.service.WalletService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletServiceImpl implements WalletService {
 	
 	private WalletRepository walletRepository;
+	private UserService userService;
 	
 	public WalletServiceImpl(WalletRepository walletRepository) {
 		this.walletRepository = walletRepository;
@@ -48,4 +51,14 @@ public class WalletServiceImpl implements WalletService {
         return wallet.getBalance();
 	}
 
+	@Override
+	public void createUser(User user) {
+		Wallet wallet = new Wallet();
+		wallet.setBalance(0.0);
+		wallet.setUserName(user.getUserName());
+		walletRepository.save(wallet);
+		user.setWallet(wallet);
+		userService.createUser(user);
+	}
+	
 }

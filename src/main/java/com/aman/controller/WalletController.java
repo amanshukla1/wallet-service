@@ -4,10 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aman.entity.User;
+import com.aman.entity.Wallet;
 import com.aman.service.WalletService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +39,7 @@ public class WalletController {
 	}
 
 	@GetMapping("/debit")
-	public ResponseEntity<?> debit(@RequestParam("amount") double amount) {
+	public ResponseEntity<String> debit(@RequestParam("amount") double amount) {
 		log.info("Debit request - amount {}", amount);
 
 		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -46,7 +50,7 @@ public class WalletController {
 	}
 
 	@GetMapping("/balance")
-	public ResponseEntity<?> getBalance() {
+	public ResponseEntity<String> getBalance() {
 		log.info("Balance check request - ");
 
 		String userName = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -54,6 +58,12 @@ public class WalletController {
 
 		Double balance = walletService.getBalance(userName);
 		return new ResponseEntity<>("Balance - " + balance, HttpStatus.OK);
+	}
+	
+	@PostMapping("/add-user")
+	public ResponseEntity<User> createUser(@RequestBody User user) {
+		walletService.createUser(user);
+		return new ResponseEntity<>(user,HttpStatus.CREATED);
 	}
 
 }

@@ -23,11 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminController {
 	
 	private UserService userService;
-	private WalletRepository walletRepository;
 	
-	public AdminController(UserService userService, WalletRepository walletRepository) {
+	public AdminController(UserService userService) {
 		this.userService = userService;
-		this.walletRepository = walletRepository;
 	}
 	
 	@GetMapping("/all-users")
@@ -41,17 +39,6 @@ public class AdminController {
 	public ResponseEntity<User> getUserDetail(@RequestParam("userName") String userName) {
 		User user = userService.fetchUser(userName);
 		return new ResponseEntity<>(user,HttpStatus.OK);
-	}
-	
-	@PostMapping("/add-user")
-	public ResponseEntity<User> createUser(@RequestBody User user) {
-		Wallet wallet = new Wallet();
-		wallet.setBalance(0.0);
-		wallet.setUserName(user.getUserName());
-		walletRepository.save(wallet);
-		user.setWallet(wallet);
-		userService.createUser(user);
-		return new ResponseEntity<>(user,HttpStatus.CREATED);
 	}
 
 }
