@@ -1,5 +1,9 @@
 package com.aman.service.impl;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.springframework.stereotype.Service;
 
 import com.aman.entity.User;
@@ -19,10 +23,12 @@ public class WalletServiceImpl implements WalletService {
 	
 	private WalletRepository walletRepository;
 	private UserService userService;
+	private WalletLockManager lockManager;
 	
-	public WalletServiceImpl(WalletRepository walletRepository, UserService userService) {
+	public WalletServiceImpl(WalletRepository walletRepository, UserService userService, WalletLockManager lockManager) {
 		this.walletRepository = walletRepository;
 		this.userService = userService;
+		this.lockManager = lockManager;
 	}
 
 	@Override
@@ -30,20 +36,39 @@ public class WalletServiceImpl implements WalletService {
 		Wallet wallet = walletRepository.findByUserName(userName).orElseThrow(() -> new WalletNotFoundException("Wallet not found!!"));
 		wallet.setBalance(wallet.getBalance() + amount);
 		walletRepository.save(wallet);
-		log.info("Credited {} to user {}", amount, userName);	
+		log.info("Credited {} to user {}", amount, userName);
 	}
 
 	@Override
 	public void debit(String userName, double amount) {
-		Wallet wallet = walletRepository.findByUserName(userName).orElseThrow(() -> new WalletNotFoundException("Wallet not found!!"));
-		if (wallet.getBalance() < amount) {
-            throw new InsufficientBalanceException("Not enough balance!!");
-        }
-		if(wallet.getBalance() >= amount) {
+		Lock lock = lockManager.getLock(userName); // shared lock
+		boolean isLockAcquired = false;
+
+		try {
+			isLockAcquired = lock.tryLock(5, TimeUnit.SECONDS);
+			if (!isLockAcquired) {
+				throw new RuntimeException("Could not acquire lock to perform debit");
+			}
+
+			Wallet wallet = walletRepository.findByUserName(userName)
+					.orElseThrow(() -> new WalletNotFoundException("Wallet not found!!"));
+
+			if (wallet.getBalance() < amount) {
+				throw new InsufficientBalanceException("Not enough balance!!");
+			}
+
 			wallet.setBalance(wallet.getBalance() - amount);
+			walletRepository.save(wallet);
+			log.info("Debited {} from user {}", amount, userName);
+
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt(); // Restore interrupt flag
+			throw new RuntimeException("Thread was interrupted while waiting for lock", e);
+		} finally {
+			if (isLockAcquired) {
+				lock.unlock();
+			}
 		}
-		walletRepository.save(wallet);
-		log.info("Debited {} from user {}", amount, userName);	
 	}
 
 	@Override
