@@ -30,13 +30,14 @@ public class AdminController {
 	
 	@GetMapping("/all-users")
 	public ResponseEntity<List<User>> fetchAllUsers() {
-		log.info("inside fetchAllUSers!!!");
+		log.info("inside AdminController - fetchAllUSers!!!");
 		List<User> userList = userService.fetchAllUsers();
 		return new ResponseEntity<>(userList,HttpStatus.OK);
 	}
 	
 	@GetMapping("/user")
 	public ResponseEntity<User> getUserDetail(@RequestParam("userName") String userName) {
+		log.info("inside AdminController - getUserDetail!!!");
 		User user = userService.fetchUser(userName);
 		return new ResponseEntity<>(user,HttpStatus.OK);
 	}

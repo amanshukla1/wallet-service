@@ -2,8 +2,7 @@ package com.aman.service.impl;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.aman.entity.User;
@@ -41,11 +40,11 @@ public class WalletServiceImpl implements WalletService {
 
 	@Override
 	public void debit(String userName, double amount) {
-		Lock lock = lockManager.getLock(userName); // shared lock
+		Lock lock = lockManager.getLock(userName);
 		boolean isLockAcquired = false;
 
 		try {
-			isLockAcquired = lock.tryLock(5, TimeUnit.SECONDS);
+			isLockAcquired = lock.tryLock(10, TimeUnit.SECONDS);
 			if (!isLockAcquired) {
 				throw new RuntimeException("Could not acquire lock to perform debit");
 			}
@@ -62,7 +61,7 @@ public class WalletServiceImpl implements WalletService {
 			log.info("Debited {} from user {}", amount, userName);
 
 		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt(); // Restore interrupt flag
+			Thread.currentThread().interrupt();
 			throw new RuntimeException("Thread was interrupted while waiting for lock", e);
 		} finally {
 			if (isLockAcquired) {
@@ -81,13 +80,19 @@ public class WalletServiceImpl implements WalletService {
 	@Override
 	@Transactional
 	public void createUser(User user) {
-		Wallet wallet = new Wallet();
-		wallet.setBalance(0.0);
-		wallet.setUserName(user.getUserName());
-		walletRepository.save(wallet);
-		user.setWallet(wallet);
-		user.setRole("USER");
-		userService.createUser(user);
+		try {
+			Wallet wallet = new Wallet();
+			wallet.setBalance(0.0);
+			wallet.setUserName(user.getUserName());
+			walletRepository.save(wallet);
+			user.setWallet(wallet);
+			user.setRole("USER");
+			userService.createUser(user);
+		} catch (DataIntegrityViolationException e) {
+			log.warn("Duplicate user creation attempted for username: {}", user.getUserName());
+			throw new IllegalArgumentException("Username already exists");
+		}
+
 	}
-	
+
 }

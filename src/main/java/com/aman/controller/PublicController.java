@@ -25,11 +25,15 @@ public class PublicController {
 	public ResponseEntity<String> healthCheck() {
 		return new ResponseEntity<>("Service is up!!", HttpStatus.OK);
 	}
-	
+
 	@PostMapping("/add-user")
-	public ResponseEntity<User> createUser(@RequestBody User user) {
+	public ResponseEntity<String> createUser(@RequestBody User user) {
+		if (user.getUserName() == null || user.getPassword() == null || user.getUserName().isBlank()
+				|| user.getPassword().isBlank()) {
+			return new ResponseEntity<>("UserName, Password can't be blank", HttpStatus.BAD_REQUEST);
+		}
 		walletService.createUser(user);
-		return new ResponseEntity<>(user,HttpStatus.CREATED);
+		return new ResponseEntity<>("User Created...", HttpStatus.CREATED);
 	}
 
 }

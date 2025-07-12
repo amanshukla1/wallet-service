@@ -34,12 +34,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional
 	public void createUser(User user) {
-		try {
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
 			userRepository.save(user);
-		} catch (DataIntegrityViolationException e) {
-			throw new DuplicateUserException("User already exists");
-		}
 	}
 
 	@Override
